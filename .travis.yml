@@ -26,4 +26,4 @@ before_script:
 after_success:
   - codeclimate-test-reporter
 
-script: coverage run --omi\/\* -m unittest discover tests/
+script: coverage run --omit\/\* -m unittest discover tests/

@@ -128,6 +128,12 @@ class ApiTestCase(unittest.TestCase):
                               '/names/')
         return retval
 
+    def create_family(self, name, tlp_level=None):
+        retval = self.app.post('/api/1.0/family/',
+                data=json.dumps(dict(name=name, tlp_level=tlp_level)),
+                content_type="application/json")
+        return retval
+
     def test_get_sample_info(self):
         """
             Just check if we can access the sample id
@@ -226,10 +232,7 @@ class ApiTestCase(unittest.TestCase):
         """
             This will test the families creation and access
         """
-        retval = self.app.post('/api/1.0/family/',
-                data=json.dumps(dict(name='TESTFAMILY1')),
-                content_type="application/json")
-
+        retval = self.create_family("TESTFAMILY1")
         self.assertEqual(retval.status_code, 200)
         data = json.loads(retval.data)
         self.assertEqual(data['family'], 1)
@@ -246,10 +249,8 @@ class ApiTestCase(unittest.TestCase):
         """
             Test the TLP level affectation for a family
         """
-        retval = self.app.post('/api/1.0/family/',
-                data=json.dumps(dict(name='TESTFAMILY1', tlp_level=5)),
-                content_type="application/json")
 
+        retval = self.create_family("TESTFAMILY2", tlp_level=5)
         self.assertEqual(retval.status_code, 200)
 
         retval = self.app.get('/api/1.0/family/1/')
@@ -258,9 +259,25 @@ class ApiTestCase(unittest.TestCase):
         family = data['family']
         self.assertEqual(family["TLP_sensibility"], 5)
 
+    def test_family_abstract(self):
+        """
+            Try to update the family abstract
+        """
+        self.create_family("TESTFAMILY1")
+        data = json.dumps(dict(abstract="Test abstract"))
+        retval = self.app.post("/api/1.0/family/1/abstract/", data=data,
+                               content_type="application/json")
+        self.assertEqual(retval.status_code, 200)
+        self.assertTrue(json.loads(retval.data)["result"])
 
+        retval = self.app.get("/api/1.0/family/1/")
+        data = json.loads(retval.data)["family"]
+        self.assertIn(data["abstract"], "Test abstract")
 
     def test_push_comments(self):
+        """
+            Can we push comments for a sample?
+        """
         retval = self.push_comment(address=0xDEADBEEF, comment="TESTCOMMENT1")
         self.assertEqual(retval.status_code, 200)
         data = json.loads(retval.data)

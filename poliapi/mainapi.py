@@ -72,7 +72,7 @@ class MainModule(object):
             Wrapper for requests.get
             @arg args is a dict wich is converted to URL parameters
         """
-        answer = requests.get(endpoint)
+        answer = requests.get(endpoint, params=args)
         if answer.status_code != 200:
             if answer.status_code == 404:
                 self.logger.error(
@@ -177,3 +177,14 @@ class FamilyModule(MainModule):
         endpoint += name
         answer = self.get(endpoint)
         return answer
+
+    def set_family_abstract(self, fid, abstract):
+        """
+            Set a new abstract for a family
+        """
+        self.logger.info("Setting family abstract")
+        endpoint = self.prepare_endpoint(root='family')
+        endpoint += str(fid) + '/abstract/'
+
+        json_data = dict(abstract=abstract)
+        return self.post(endpoint, json=json_data)["result"]

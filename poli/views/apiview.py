@@ -193,7 +193,7 @@ def api_get_family(fname):
     return jsonify({"family": data})
 
 
-@apiview.route('/family/<fid>/', methods=['GET'])
+@apiview.route('/family/<int:fid>/', methods=['GET'])
 def api_get_family_by_id(fid):
     fam = api.familycontrol.get_by_id(fid)
     if fam is None:
@@ -203,6 +203,22 @@ def api_get_family_by_id(fid):
         result = schema.dump(fam).data
     return jsonify({"family": result})
 
+@apiview.route('/family/<int:fid>/abstract/', methods=['POST'])
+def api_set_family_abstract(fid):
+    """
+        @arg abstract: The family abstract
+    """
+    if request.json is None:
+        abort(400, "Missing JSON data")
+
+    try:
+        family = api.familycontrol.get_by_id(fid)
+        abstract = request.json["abstract"]
+        result = api.familycontrol.set_abstract(family, abstract)
+        return jsonify({"result":result})
+
+    except KeyError:
+        abort(400, "Missing abstract data")
 
 @apiview.route('/family/<fam_name>', methods=['POST'])
 def api_post_family(fam_name):

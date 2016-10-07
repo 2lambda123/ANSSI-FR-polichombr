@@ -149,6 +149,17 @@ class SampleModule(MainModule):
         answer = self.post(endpoint, json=fam)
         return answer
 
+    def set_abstract(self, sid, abstract):
+        """
+            Updates a sample's abstract
+        """
+        endpoint = self.prepare_endpoint(root='samples')
+        endpoint += str(sid) + '/abstract/'
+
+        json_data = dict(abstract=abstract)
+        return self.post(endpoint, json=json_data)["result"]
+
+
 
 class FamilyModule(MainModule):
     """

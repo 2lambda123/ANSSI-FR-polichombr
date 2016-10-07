@@ -183,8 +183,11 @@ def api_post_families():
     return jsonify({'family': fid})
 
 
-@apiview.route('/family/<fname>', methods=['GET'])
+@apiview.route('/family/<fname>/', methods=['GET'])
 def api_get_family(fname):
+    """
+        Get family data using it's name
+    """
     fam = api.familycontrol.get_by_name(fname)
     if fam is None:
         return jsonify({"family": None})

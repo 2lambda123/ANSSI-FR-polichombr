@@ -253,10 +253,9 @@ class ApiTestCase(unittest.TestCase):
         family = data['families'][0]
         self.assertIn(family['name'], 'TESTFAMILY1')
 
-        retval = self.app.get('/api/1.0/family/TESTFAMILY1')
+        retval = self.app.get('/api/1.0/family/TESTFAMILY1/')
         self.assertEqual(retval.status_code, 200)
         family = json.loads(retval.data)['family']
-        print family
         self.assertIn(family['name'], "TESTFAMILY1")
         self.assertEqual(family['id'], 1)
 

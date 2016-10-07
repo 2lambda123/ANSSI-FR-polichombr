@@ -168,13 +168,15 @@ class FamilyModule(MainModule):
     def __init__(self):
         super(FamilyModule, self).__init__()
 
-    def create_family(self, name, tlp_level=3):
+    def create_family(self, name, parent=None, tlp_level=3):
         """
             Create a family, and return it's id
         """
         self.logger.info("Creating family %s", name)
         endp = self.prepare_endpoint(root='family')
         json_data = dict(name=name, tlp_level=tlp_level)
+        if parent is not None:
+            json_data["parent"] = parent
         data = self.post(endp, json=json_data)
         return data["family"]
 

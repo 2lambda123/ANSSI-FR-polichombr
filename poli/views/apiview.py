@@ -218,7 +218,7 @@ def api_set_family_abstract(fid):
         family = api.familycontrol.get_by_id(fid)
         abstract = request.json["abstract"]
         result = api.familycontrol.set_abstract(family, abstract)
-        return jsonify({"result":result})
+        return jsonify({"result": result})
 
     except KeyError:
         abort(400, "Missing abstract data")

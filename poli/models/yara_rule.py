@@ -12,6 +12,7 @@ from datetime import datetime
 
 from poli import db, ma
 
+
 class YaraRule(db.Model):
     """
         Yara rule model.

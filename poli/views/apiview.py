@@ -13,6 +13,7 @@ import os
 from poli import api, apiview, app
 from poli.models.family import FamilySchema
 from poli.models.sample import Sample, SampleSchema
+from poli.models.yara_rule import YaraSchema
 from poli.models.models import TLPLevel
 
 from flask import jsonify, request, send_file, abort, make_response
@@ -167,7 +168,6 @@ def api_post_families():
         app.logger.warning("No TLP for family, default to AMBER")
 
     pfam = None
-
     try:
         if data['parent']:
             pfam = api.familycontrol.get_by_name(data['parent'])
@@ -582,8 +582,41 @@ def api_get_iat_matches(sid):
 @apiview.route('/samples/<int:sid>/matches/yara', methods=['GET'])
 def api_get_yara_matches(sid):
     """
-        TODO : Get yara hashes
+        TODO : Get yara matches
     """
     samp = api.samplecontrol.get_by_id(sid)
     result = None
     return jsonify({'result': result})
+
+
+@apiview.route('/yaras/', methods=['GET'])
+def api_get_all_yaras():
+    """
+        Dump all the yaras
+    """
+    yaras = api.yaracontrol.get_all()
+    schema = YaraSchema(many=True)
+    return jsonify({'yara_rules': schema.dump(yaras).data})
+
+@apiview.route('/yaras/', methods=['POST'])
+def api_create_yara():
+    """
+        Add a new yara
+        @arg name: the yara name
+        @arg rule: the full text of the rule
+        @arg tlp_level: Optional, the sensibility of the rule. Default = TLP AMBER
+    """
+    tlp_level = None
+    data = request.json
+    name = data["name"]
+    rule = data["rule"]
+    if 'tlp_level' in data.keys():
+        tlp_level = data["tlp_level"]
+
+    if tlp_level is None:
+        tlp_level = TLPLevel.TLPAMBER
+
+    result = api.yaracontrol.create(name, rule, tlp_level)
+    if result is None or not result:
+        abort(500, "Cannot create yara rule")
+    return jsonify({"id": result.id})

@@ -160,7 +160,6 @@ class SampleModule(MainModule):
         return self.post(endpoint, json=json_data)["result"]
 
 
-
 class FamilyModule(MainModule):
     """
         Utilities to manage families

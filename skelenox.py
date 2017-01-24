@@ -386,6 +386,7 @@ class SkelConnection(object):
             Prepare a standard API endpoint
         """
         endpoint = self.remote_path
+        endpoint += "/api/1.0/samples/"
         endpoint += str(self.sample_id)
         endpoint += "/" + submodule + "/"
         return endpoint

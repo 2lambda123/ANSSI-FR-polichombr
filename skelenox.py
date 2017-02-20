@@ -381,11 +381,12 @@ class SkelConnection(object):
         print endpoint
         return False
 
-    def prepare_endpoint(self, submodule):
+    def prepare_endpoint(self, submodule, version="1.0"):
         """
             Prepare a standard API endpoint
         """
         endpoint = self.remote_path
+        endpoint += "/api/" + version + "/samples/"
         endpoint += str(self.sample_id)
         endpoint += "/" + submodule + "/"
         return endpoint

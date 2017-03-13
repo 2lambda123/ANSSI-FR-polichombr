@@ -24,16 +24,20 @@ class ApiTestCase(unittest.TestCase):
         poli.app.config['TESTING'] = False
         poli.app.config['WTF_CSRF_ENABLED'] = False
         self.app = poli.app.test_client()
-        poli.db.create_all()
+        
         with poli.app.app_context():
+            poli.db.create_all()
             api = APIControl()
             api.usercontrol.create("john", "password")
         self._create_sample()
-        poli.db.session.commit()
+        
+        with poli.app.app_context():
+	    poli.db.session.commit()
 
     def tearDown(self):
-        poli.db.session.remove()
-        poli.db.drop_all()
+        with poli.app.app_context():
+            poli.db.session.remove()
+            poli.db.drop_all()
         os.close(self.db_fd)
         os.unlink(self.fname)
 

@@ -30,8 +30,9 @@ class WebUITestCase(unittest.TestCase):
 
 
     def tearDown(self):
-        poli.db.session.remove()
-        poli.db.drop_all()
+        with poli.app.app_context():
+            poli.db.session.remove()
+            poli.db.drop_all()
         os.close(self.db_fd)
         os.unlink(self.fname)
 

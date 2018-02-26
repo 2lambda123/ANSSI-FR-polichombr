@@ -24,13 +24,13 @@ This documentation will provide the algorithm specification and some use cases.
 To illustrate the algorithm, we will use the call flow graph of a function
 composed of 10 basic blocks, with two of them containing a `call` instruction.
 
-![Example Call Flow Graph](docs/screenshots/cfg.png)
+![Example Call Flow Graph](screenshots/cfg.png)
 
 ### Basic block numbering
 
 Numbering the basic blocks ordered by address give the second graph.
 
-![Numbered graph](docs/screenshots/cfg_numbered.png)
+![Numbered graph](screenshots/cfg_numbered.png)
 
 ### Basic block translation
 

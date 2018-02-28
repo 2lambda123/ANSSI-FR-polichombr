@@ -16,7 +16,7 @@ This documentation will provide the algorithm specification and some use cases.
 
 4. Each block translation should be hashed with a fuzzy hashing function to produce a 32 bits output.
    The reference implementation uses the `Murmurhash3` function.
-5. The machoc hash a a binary should be the concatenation of all the machoc hashes of the different functions in the binary.
+5. The machoc hash of a binary should be the concatenation of all the machoc hashes of the different functions in the binary.
 6. The output for a full binary could include the function address with the corresponding machoc hash.
 
 ## Example

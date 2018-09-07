@@ -40,7 +40,7 @@ class AnalysisFactory(object):
                              os.listdir(app.config['TASKS_PATH'])))
 
         def form_module(fp): return os.path.splitext(fp)[0]
-        tasks_modules = list(map(form_module, tasks_files))
+        tasks_modules = sorted(list(map(form_module, tasks_files))) #task_analyzeit must be first
         for task_filename in tasks_modules:
             if not task_filename.startswith('__'):
                 try:

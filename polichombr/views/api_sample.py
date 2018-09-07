@@ -17,6 +17,7 @@ from polichombr.models.sample import FunctionInfoSchema
 
 from flask import jsonify, request, send_file, abort, current_app, g
 from flask_security import login_required
+from polichombr.analysis_tools.lib_callCFG.compare_ccfg import compare_ccfg
 
 
 @apiview.route('/samples/<shash>/')
@@ -38,6 +39,43 @@ def api_get_sample_id_from_hash(shash):
         return jsonify({'sample_id': sample.id})
     return jsonify({'sample_id': None})
 
+@apiview.route('/callcfg/<int:sid>/download/')
+@login_required
+def api_get_callcfg_file(sid):
+    """
+        Organization : EDF-R&D-PERICLES-IRC
+        Author : JCO
+        Description : Return the callCFG png file
+        Date : 08/2018
+    """
+    sample = api.get_elem_by_type("sample", sid)
+    png_filename = sample.storage_file.replace('.bin','.png')
+    return send_file('../'+png_filename,
+                     as_attachment=True,
+                     attachment_filename=os.path.basename(png_filename))
+
+@apiview.route('/callcfg/<int:sid_1>/<int:sid_2>/download_compare_callcfg/')
+@login_required
+def api_get_compare_callcfg_file(sid_1, sid_2):
+    """
+        Organization : EDF-R&D-PERICLES-IRC
+        Author : JCO
+        Description : Return the compare callCFG png file
+        Date : 08/2018
+    """
+
+    sample_1 = api.get_elem_by_type("sample", sid_1)
+    sample_2 = api.get_elem_by_type("sample", sid_2)
+
+    png_filename = "polichombr/storage/{0}_{1}.png".format(sample_1.sha256, sample_2.sha256)
+
+    if not os.path.exists(png_filename):
+        compare_ccfg_inst = compare_ccfg(sid_1)
+        compare_ccfg_inst.get_png_comparaison(sid_2)
+
+    return send_file('../'+png_filename,
+                     as_attachment=True,
+                     attachment_filename=os.path.basename(png_filename))
 
 @apiview.route('/samples/<int:sid>/download/')
 @login_required

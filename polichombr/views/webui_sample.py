@@ -25,7 +25,7 @@ from polichombr.views.forms import AddSampleToFamilyForm, ChangeTLPForm
 from polichombr.views.forms import CompareMachocForm
 
 from polichombr.controllers.sample import disassemble_sample_get_svg
-
+from polichombr.analysis_tools.lib_callCFG.compare_ccfg import compare_ccfg
 
 @webuiview.route('/samples/', methods=['GET', 'POST'])
 @login_required
@@ -41,6 +41,8 @@ def ui_sample_upload():
     if upload_form.validate_on_submit():
         family_id = upload_form.family.data
         zipflag = upload_form.zipflag.data
+        offset_callcfg = upload_form.offset_callCFG.data
+        
         family = None
         if family_id != 0:
             family = api.get_elem_by_type("family", family_id)
@@ -55,7 +57,8 @@ def ui_sample_upload():
                 g.user,
                 upload_form.level.data,
                 family,
-                zipflag)
+                zipflag,
+                offset_callcfg)
             if not samples:
                 flash("Error during sample creation", "error")
             else:
@@ -78,6 +81,51 @@ def parse_machoc_form(sample, form):
         sample, comparison_level)
     return results
 
+def format_machoc_print(machoc1, machoc2):
+    """
+        Organization : EDF-R&D-PERICLES-IRC
+        Author : JCO
+        Description : Format machoc print
+    """
+    if machoc1:
+        return " | {0} -> {1}".format(machoc1, machoc2)
+    elif machoc2:
+        return " | ________ -> {0}".format(machoc2)
+    else:
+        return ""
+
+
+def compare_call_cfg(sample_id):
+    """
+        Organization : EDF-R&D-PERICLES-IRC
+        Author : JCO
+        Description : Generate comparaison results with call-CFG
+    """
+    ret = []
+    inst_compare_ccfg = compare_ccfg(sample_id)
+    dict_results = inst_compare_ccfg.process_all_comparaison()
+
+    if dict_results == None:
+        return ret
+    for sample_id_tmp, result in dict_results.iteritems():
+        pourcent, a_inter_b, a_union_b, diff_details = result
+        if int(pourcent) >= 80:
+
+            ret_plus = []
+            ret_minus = []
+            diff_plus, diff_minus = diff_details
+            for element in diff_plus:
+                ret_plus.append('  [+] {0} (<a href="/sample/{1}/disassemble/{2}">{3}</a>) -> call {4} (<a href="/sample/{1}/disassemble/{5}">{6}</a>){7}'.format(element["parent_func"], sample_id, element["offset_parent"].replace('0x',''), element["offset_parent"], element["child_func"], element["offset_child"].replace('0x',''), element["offset_child"], format_machoc_print(element["machoc1"],element["machoc2"])))
+            for element in diff_minus:
+                ret_minus.append('  [-] {0} (<a href="/sample/{1}/disassemble/{2}">{3}</a>) -> call {4} (<a href="/sample/{1}/disassemble/{5}">{6}</a>){7}'.format(element["parent_func"], sample_id_tmp, element["offset_parent"].replace('0x',''), element["offset_parent"], element["child_func"], element["offset_child"].replace('0x',''), element["offset_child"], format_machoc_print(element["machoc1"],element["machoc2"])))
+
+
+            sample = api.get_elem_by_type("sample", sample_id_tmp)
+
+            ret.append([sample.filenames[0].name, "{0}% ({1}/{2})".format(str(round(pourcent,2)), str(int(a_inter_b)), str(int(a_union_b))), sample_id_tmp, " <br> ".join(ret_plus), " <br> ".join(ret_minus)])
+
+
+    return ret
 
 def gen_sample_view(sample_id, graph=None, fctaddr=None):
     """
@@ -92,6 +140,14 @@ def gen_sample_view(sample_id, graph=None, fctaddr=None):
     add_family_form.parentfamily.choices = families_choices
     change_tlp_level_form = ChangeTLPForm()
     machoc_form = CompareMachocForm()
+
+    callcfg = api.callcfgcontrol.get_by_id(sample_id)
+    try:
+        callcfg.offset_entrypoint = hex(int(callcfg.offset_entrypoint))
+    except:
+        pass
+
+    compare_callcfg_results = compare_call_cfg(sample_id)
 
     if add_family_form.validate_on_submit():
         family_id = add_family_form.parentfamily.data
@@ -113,6 +169,7 @@ def gen_sample_view(sample_id, graph=None, fctaddr=None):
 
     return render_template("sample.html",
                            sample=sample,
+                           callcfg=callcfg,
                            abstractform=set_sample_abstract_form,
                            checklists=api.samplecontrol.get_all_checklists(),
                            changetlpform=change_tlp_level_form,
@@ -120,7 +177,8 @@ def gen_sample_view(sample_id, graph=None, fctaddr=None):
                            hresults=machoc_comparison_results,
                            addfamilyform=add_family_form,
                            graph=graph,
-                           fctaddr=fctaddr)
+                           fctaddr=fctaddr,
+                           compare_callcfg_results=compare_callcfg_results)
 
 
 @webuiview.route('/sample/<int:sample_id>/', methods=['GET', 'POST'])
@@ -238,6 +296,15 @@ def delete_sample(sample_id):
     """
     sample = api.get_elem_by_type("sample", sample_id)
     api.samplecontrol.delete(sample)
+
+    callcfg = api.callcfgcontrol.get_by_id(sample_id)
+    if callcfg != None:
+        api.callcfgcontrol.delete(callcfg)
+
+    offset_callcfg = api.offset_callcfgcontrol.get_by_sample_id(sample_id)
+    if offset_callcfg != None:
+        api.offset_callcfgcontrol.delete_multiple_offset_callCFG(offset_callcfg)
+
     return redirect(url_for('webuiview.index'))
 
 
@@ -248,3 +315,29 @@ def download_sample(sample_id):
         Download a sample's file.
     """
     return redirect(url_for('apiview.api_get_sample_file', sid=sample_id))
+
+@webuiview.route('/callcfg/<int:sample_id>/download/')
+@login_required
+def download_sample_ccfg(sample_id):
+    """
+        Organization : EDF-R&D-PERICLES-IRC
+        Author : JCO
+        Description : Download a sample's file.
+        Date : 08/2018
+    """
+
+    return redirect(url_for('apiview.api_get_callcfg_file', sid=sample_id))
+
+@webuiview.route('/callcfg/<int:sample_id_1>/<int:sample_id_2>/download_compare_callcfg/')
+@login_required
+def download_compare_sample_ccfg(sample_id_1, sample_id_2):
+    """
+        Organization : EDF-R&D-PERICLES-IRC
+        Author : JCO
+        Description : Download a sample's file.
+        Date : 08/2018
+    """
+
+    print sample_id_1, sample_id_2
+    return redirect(url_for('apiview.api_get_compare_callcfg_file', sid_1=sample_id_1, sid_2=sample_id_2))
+

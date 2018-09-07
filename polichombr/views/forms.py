@@ -11,7 +11,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField
 from wtforms import StringField, SelectField
-from wtforms import SubmitField, TextAreaField, BooleanField
+from wtforms import SubmitField, TextAreaField, BooleanField, TextField
 from wtforms import PasswordField, HiddenField
 from wtforms import IntegerField
 from wtforms.validators import DataRequired, Length, EqualTo
@@ -267,7 +267,8 @@ class UploadSampleForm(FlaskForm):
                       render_kw={'multiple': True})
     level = SelectField('Sensibility', choices=TLPLevelChoices,
                         coerce=int, validators=[DataRequired()])
-    family = SelectField('Associated Family', coerce=int)
+    family = SelectField('Associated Family', coerce=int)    
+    offset_callCFG = TextField('Offset call CFG')
     zipflag = BooleanField('Sample Zip archive')
     uploadsample = SubmitField('Submit')
 

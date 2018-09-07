@@ -340,6 +340,78 @@
 
 		<div class="tab-pane" id="matches">
             <br />
+
+
+        {% if callcfg.offset_entrypoint %}
+
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Call-CFG compare</h3>
+                </div>
+                    <div class="panel-body">
+                        <br>
+                        <b>Start offset :</b> &nbsp;
+                        <code >{{callcfg.offset_entrypoint}}</code>
+
+                        <a href="/callcfg/{{sample.id}}/download" class="btn btn-default" role="button" style="float: right;">Download Call-CFG</a>
+                       <br><br>
+
+                       <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Filename</th>
+                                <th>Diff</th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for reslt in compare_callcfg_results %}
+                            <tr>
+                                <td><a href="/sample/{{reslt[2]}}">{{reslt[0]}}</a></td>
+                                <td>{{reslt[1]}}</td>
+
+                                <td>
+                                    {% if reslt[3] or reslt[4] %}
+                                    <a class="btn btn-default" role="button" data-toggle='collapse' data-target="#collaspse_diff_{{reslt[2]}}">Collapse</a>
+                                    {% endif %}
+
+                                </td>
+                                <td>
+                                    {% if reslt[3] or reslt[4] %}
+
+                                    <a href='/callcfg/{{sample.id}}/{{reslt[2]}}/download_compare_callcfg'>
+                                        <span class='glyphicon glyphicon-download-alt'></span>
+                                    </a>{% endif %}
+                                </td>
+                            </tr>
+                            {% if reslt[3] or reslt[4] %}
+                            <tr ><td colspan="4" style="border-top-width: 0px;">
+                                <div  id='collaspse_diff_{{reslt[2]}}' class='collapse well' >
+                                {% if reslt[3] %}
+                                -&rsaquo; Elements IN '{{sample.filenames[0].name}}' and NOT IN '{{reslt[0]}}'
+                                <br><br>
+                                {{reslt[3]|safe}}
+                                <br><br>
+                                {% endif %}
+                                {% if reslt[4] %}
+                                -&rsaquo; Elements NOT IN '{{sample.filenames[0].name}}' and IN '{{reslt[0]}}'
+                                <br><br>
+                                {{reslt[4]|safe}}
+                                {% endif %}  
+                            </div></td>
+                            </tr>
+                            {% endif %}  
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    </div>
+            </div>
+
+            {% endif %}
+
+
+
             <div class="panel panel-primary">
                 <div class="panel-heading">
                     <h3 class="panel-title">Machoc compare</h3>

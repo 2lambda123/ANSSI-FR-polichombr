@@ -45,7 +45,7 @@ class SampleController(object):
         pass
 
     def create_sample_from_file(self, file_data, orig_filename="", user=None,
-                                tlp_level=TLPLevel.TLPWHITE):
+                                tlp_level=TLPLevel.TLPWHITE, offset_callCFG=None):
         """
             Creates a sample from file data. Updates metadata, etc.
         """
@@ -84,6 +84,8 @@ class SampleController(object):
         sample.sha1 = sha1(file_data).hexdigest()
         sample.sha256 = sha_256
         sample.size = len(file_data)
+        sample.offset_callCFG = offset_callCFG
+
         # Specific metadata, resulting from Tasks
         sample.import_hash = ""
         sample.machoc_hash = ""
@@ -124,6 +126,12 @@ class SampleController(object):
         """
         if os.path.exists(sample.storage_file):
             os.remove(sample.storage_file)
+
+        if os.path.exists(sample.storage_file.replace('.bin','.dot')):
+            os.remove(sample.storage_file.replace('.bin','.dot'))
+
+        if os.path.exists(sample.storage_file.replace('.bin','.png')):
+            os.remove(sample.storage_file.replace('.bin','.png'))
 
         strings = StringsItem.query.filter_by(sample_id=sample.id).all()
 

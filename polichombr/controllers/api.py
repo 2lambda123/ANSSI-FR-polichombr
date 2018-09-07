@@ -25,6 +25,7 @@ from polichombr.controllers.yara_rule import YaraController
 from polichombr.controllers.family import FamilyController
 from polichombr.controllers.user import UserController
 from polichombr.controllers.idaactions import IDAActionsController
+from polichombr.controllers.callCFG import callCFGController, offset_callCFGController
 from polichombr.models.sample import FunctionInfo
 
 
@@ -50,6 +51,8 @@ class APIControl(object):
     analysiscontrol = AnalysisController(
         app.config['ANALYSIS_PROCESS_POOL_SIZE'])
     idacontrol = IDAActionsController()
+    callcfgcontrol = callCFGController()
+    offset_callcfgcontrol = offset_callCFGController()
 
     def __init__(self):
         """
@@ -63,7 +66,8 @@ class APIControl(object):
                                  user=None,
                                  tlp=TLPLevel.TLPWHITE,
                                  family=None,
-                                 zipflag=True):
+                                 zipflag=True,
+                                 offset_callCFG=None):
         """
             If the sample is a ZipFile, we unpack it and return
             the last sample,otherwise we return a single sample.
@@ -71,17 +75,18 @@ class APIControl(object):
         file_data = file_stream.read(4)
         file_stream.seek(0)
         if file_data.startswith(b"PK") and zipflag:
-            samples = self.create_from_zip(file_stream, user, tlp, family)
+            samples = self.create_from_zip(file_stream, user, tlp, family, offset_callCFG)
         else:
             sample = self.create_sample_and_run_analysis(file_stream,
                                                          filename,
                                                          user,
                                                          tlp,
-                                                         family)
+                                                         family,
+                                                         offset_callCFG)
             samples = [sample]
         return samples
 
-    def create_from_zip(self, file_stream, user, tlp, family):
+    def create_from_zip(self, file_stream, user, tlp, family, offset_callCFG):
         """
             Iterates over the samples in the zip
         """
@@ -94,7 +99,8 @@ class APIControl(object):
                                                              name,
                                                              user,
                                                              tlp,
-                                                             family)
+                                                             family,
+                                                             offset_callCFG)
                 output_samples.append(sample)
             zcl.close()
         return output_samples
@@ -105,7 +111,8 @@ class APIControl(object):
             originate_filename="",
             user=None,
             tlp_level=TLPLevel.TLPWHITE,
-            family=None):
+            family=None,
+            offset_callCFG=None):
         """
             Creates a new sample and a schedule an analysis. We also check the
             file header for ZIP pattern: if a ZIP pattern is found, any file
@@ -116,7 +123,7 @@ class APIControl(object):
         """
         file_data = file_data_stream.read()
         sample = self.samplecontrol.create_sample_from_file(
-            file_data, originate_filename, user, tlp_level)
+            file_data, originate_filename, user, tlp_level, offset_callCFG)
         if sample.analysis_status == AnalysisStatus.TOSTART:
             self.analysiscontrol.schedule_sample_analysis(sample.id)
         if family is not None:

@@ -268,6 +268,26 @@ class SkelIDAConnection(SkelConnection):
             logger.error("Cannot send comment %s ( 0x%x )", comment, address)
         return res["result"]
 
+    def push_comments(self, addresses=0, comments=None):
+        """
+            Push a standard comment
+        """
+        if comments is None or addresses == 0:
+            return False
+        data = {'address':[], 'comment':[]}
+        for address in addresses :
+            data['address'].append(address)
+        for comment in comments :
+            data['comment'].append(comment)
+        endpoint = self.prepare_endpoint('comments')
+        res = self.poli_post(endpoint, data)
+        if res["result"]:
+            logger.debug(
+                "Comments sent")
+        else:
+            logger.error("Cannot send comments")
+        return res["result"]
+
     def push_type(self, address, mtype=None):
         """
             Push defined types, parsed with prepare_parse_type
@@ -340,6 +360,27 @@ class SkelIDAConnection(SkelConnection):
             logger.debug("sent name %s at 0x%x", name, address)
         else:
             logger.error("failed to send name %s", name)
+        return True
+
+    def push_names(self, addresses=0, names=None):
+        """
+            Send a define name, be it func or area
+        """
+        if names is None:
+            return False
+        
+        data = {'address':[], 'name':[]}
+        for address in addresses :
+            data['address'].append(address)
+        for name in names :
+            data['name'].append(name)
+        #data = list(map(lambda x, y: {'address':x, 'name':y}, addresses, names))
+        endpoint = self.prepare_endpoint('names')
+        res = self.poli_post(endpoint, data)
+        if res["result"]:
+            logger.debug("sent names")
+        else:
+            logger.error("failed to send names")
         return True
 
     def create_struct(self, struct_name):

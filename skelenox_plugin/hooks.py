@@ -35,7 +35,7 @@ class SkelIDBHook(ida_idp.IDB_Hooks):
             Function comments are Area comments
         """
         cb, area, cmt, rpt = args
-        self.skel_conn.push_comment(area.startEA, cmt)
+        self.skel_conn.push_comments([area.startEA], [cmt])
 
         return ida_idp.IDB_Hooks.area_cmt_changed(self, *args)
 
@@ -51,7 +51,7 @@ class SkelIDBHook(ida_idp.IDB_Hooks):
                 auto = idaapi.has_auto_name(idaapi.get_flags(ea))
                 dummy = idaapi.has_dummy_name(idaapi.get_flags(ea))
                 if not dummy and not auto:
-                    self.skel_conn.push_name(ea, new_name)
+                    self.skel_conn.push_names([ea], [new_name])
         else:
             logger.warning("ea outside program...")
 
@@ -66,7 +66,7 @@ class SkelIDBHook(ida_idp.IDB_Hooks):
                      addr, rpt)
         cmt = idc.get_cmt(addr, rpt)
         if not SkelUtils.filter_coms_blacklist(cmt):
-            self.skel_conn.push_comment(addr, cmt)
+            self.skel_conn.push_comments([addr], [cmt])
         return ida_idp.IDB_Hooks.cmt_changed(self, *args)
 
     def gen_regvar_def(self, *args):

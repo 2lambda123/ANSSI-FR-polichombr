@@ -94,18 +94,28 @@ class SkelCore(object):
             Used to send all the names to the server.
             Usecase: Previously analyzed IDB
         """
+        addresses = []
+        names = []
         for head in idautils.Names():
             if not idaapi.has_dummy_name(idaapi.get_flags(head[0])):
-                self.skel_conn.push_name(head[0], head[1])
+                addresses.append(head[0])
+                names.append(head[1])
+        if len(names) > 0:
+            self.skel_conn.push_names(addresses, names)
 
     def send_comments(self):
         """
             Initial sync of comments
         """
+        comments = []
+        heads = []
         for head in idautils.Heads():
             cmt = SkelUtils.get_comment(head)
             if cmt:
-                self.skel_conn.push_comment(head, cmt)
+                heads.append(head)
+                comments.append(cmt)
+        if len(comments) > 0:
+            self.skel_conn.push_comments(heads, comments)
 
     def run(self):
         """

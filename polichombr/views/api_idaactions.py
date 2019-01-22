@@ -103,17 +103,23 @@ def api_post_sample_comments(sid):
     data = request.json
     if "address" not in list(data.keys()) or "comment" not in list(data.keys()):
         abort(400, "Missing comment or address arguments")
-    address = data['address']
-    comment = data['comment']
+    data = request.json
+    addresses = data['address']
+    comments = data['comment']
     user_id = current_user.id
-    current_app.logger.debug(
-        "Getting a new comment for sample %d : %s@0x%x",
-        sid,
-        comment,
-        address)
-    action_id = api.idacontrol.add_comment(address, comment, user_id)
-    result = api.samplecontrol.add_idaaction(sid, action_id)
-    return jsonify({'result': result})
+    results = [] 
+    for i in range(len(addresses)) :
+        address = addresses[i]
+        comment = comments[i]
+        current_app.logger.debug(
+            "Getting a new comment for sample %d : %s@0x%x",
+            sid,
+            comment,
+            address)
+        action_id = api.idacontrol.add_comment(address, comment, user_id)
+        result = api.samplecontrol.add_idaaction(sid, action_id)
+        results.append(result)
+    return jsonify({'result': results})
 
 
 @apiview.route('/samples/<int:sid>/names/', methods=['GET'])
@@ -140,21 +146,26 @@ def api_post_sample_names(sid):
         @arg name the name
     """
     data = request.json
-    addr = data['address']
-    name = data['name']
+    addresses = data['address']
+    names = data['name']
     user_id = current_user.id
-    current_app.logger.debug(
-        "Getting a new name for sample %d : %s@0x%x",
-        sid,
-        name,
-        addr)
-    action_id = api.idacontrol.add_name(addr, name, user_id)
-    result = api.samplecontrol.add_idaaction(sid, action_id)
-    if result is True:
-        api.samplecontrol.rename_func_from_action(sid, addr, name)
+    results = [] 
+    for i in range(len(addresses)) :
+        name = names[i]
+        addr = addresses[i]
+        current_app.logger.debug(
+            "Getting a new name for sample %d : %s@0x%x",
+            sid,
+            name,
+            addr)
+        action_id = api.idacontrol.add_name(addr, name, user_id)
+        result = api.samplecontrol.add_idaaction(sid, action_id)
+        results.append(result)
+        if result is True:
+            api.samplecontrol.rename_func_from_action(sid, addr, name)
         # we don't care if the function is renamed for a global name,
         # so if the name is created return True anyway
-    return jsonify({'result': result})
+    return jsonify({'result': results})
 
 
 @apiview.route('/samples/<int:sid>/types/', methods=['POST'])
